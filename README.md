@@ -8,6 +8,7 @@ administration.
 - Spring Boot 4.x.x
 - Spring Modules Covered: Spring Boot Web, Spring Data Postgres, Spring Actuator, OpenAPI, Flyway, Lombok
 - Database: PostgreSQL
+- IDE: IntelliJ IDEA (recommended)
 - Build Tool: Maven
 
 ## Option1: PostgreSQL Setup (pgAdmin)
