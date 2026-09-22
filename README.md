@@ -290,10 +290,3 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 ```
 <type>[optional scope]: <description>
 ```
-
-* **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `build`, `ci`, `chore`, `revert`, `deps`.
-* **Scopes** (optional, relate to project modules): `core`, `dev`, `k8s`, `multitenancy`, `otel`. Omit scope if the change doesn't relate to one of these modules.
-* **Style:** Present tense, imperative mood (e.g., "Add feature", not "Added feature").
-* **Breaking changes:** Append `!` after the type/scope (e.g., `feat(core)!:`) or add `BREAKING CHANGE:` in the footer.
-
-Example: `fix(module): resolved issue in partnerplay`
