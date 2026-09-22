@@ -4,12 +4,24 @@ solutions & assets, triggers radar, Smart Agents, governance, KPIs and
 administration.
 ## Prerequisites 
 
-- Java 25
+- Java 25 
 - Spring Boot 4.x.x
 - Spring Modules Covered: Spring Boot Web, Spring Data Postgres, Spring Actuator, OpenAPI, Flyway, Lombok
 - Database: PostgreSQL
 - IDE: IntelliJ IDEA (recommended)
 - Build Tool: Maven
+
+## Configure Java 25 in IntellIJ
+
+**Step 1:**
+
+![Java25Intellij.png](src/main/resources/static/Java25Intellij.png)
+
+**Step 2:**
+
+![Java25Intellij_1.png](src/main/resources/static/Java25Intellij_1.png)
+
+For more details, https://www.jetbrains.com/guide/java/playlists/java-25/
 
 ## Option1: PostgreSQL Setup (pgAdmin)
 
@@ -175,7 +187,6 @@ spring.jpa.hibernate.ddl-auto=validate
 spring.flyway.enabled=true
 spring.flyway.baseline-on-migrate=true
 
-server.port=8080
 ```
 
 ---
