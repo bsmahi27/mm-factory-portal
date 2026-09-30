@@ -3,6 +3,7 @@ package com.mmfactory.partnerplay.dto;
 import java.util.List;
 
 public record CreatePartnerPlayRequest(
+        Long id,
         String name,
         String partnerName,
         String partnerTier,

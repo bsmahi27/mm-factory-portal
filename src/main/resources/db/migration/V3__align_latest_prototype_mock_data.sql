@@ -1,5 +1,5 @@
 -- Align the persisted mock model with MMF Portal Prototype v3.1, 15 Sep 2026.
-ALTER TABLE campaigns
+ALTER TABLE mmf_portal.campaignsns
     ADD COLUMN business_line text,
     ADD COLUMN theme text,
     ADD COLUMN partner_name text,
@@ -12,8 +12,8 @@ ALTER TABLE campaigns
     ADD COLUMN bookings_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (bookings_millions >= 0),
     ADD COLUMN revenue_won_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (revenue_won_millions >= 0);
 
-ALTER TABLE radar_signals DROP CONSTRAINT radar_signals_severity_check;
-ALTER TABLE radar_signals
+ALTER TABLE mmf_portal.radar_signals DROP CONSTRAINT radar_signals_severity_check;
+ALTER TABLE mmf_portal.radar_signals
     ADD CONSTRAINT radar_signals_severity_check CHECK (severity IN ('Low', 'Medium', 'High', 'Critical')),
     ADD COLUMN signal_category text,
     ADD COLUMN published_at date,
@@ -22,12 +22,12 @@ ALTER TABLE radar_signals
     ADD COLUMN recommended_action text,
     ADD COLUMN scoring_inputs jsonb NOT NULL DEFAULT '{}';
 
-ALTER TABLE smart_agents
+ALTER TABLE mmf_portal.smart_agents
     ADD COLUMN owner_team text,
     ADD COLUMN best_used_for text,
     ADD COLUMN launches_this_quarter integer NOT NULL DEFAULT 0 CHECK (launches_this_quarter >= 0);
 
-ALTER TABLE kpi_snapshots
+ALTER TABLE mmf_portal.kpi_snapshots
     ADD COLUMN client_count integer,
     ADD COLUMN target_account_count integer,
     ADD COLUMN active_account_count integer,
@@ -38,21 +38,27 @@ ALTER TABLE kpi_snapshots
     ADD COLUMN qualified_lead_count integer,
     ADD COLUMN bookings_target_millions numeric(12,2);
 
-CREATE TABLE partner_plays (
-    name text PRIMARY KEY,
-    partner_name text NOT NULL,
-    partner_tier text NOT NULL,
-    business_line text NOT NULL,
-    theme text NOT NULL,
-    eligible_country_codes text[] NOT NULL,
-    status text NOT NULL CHECK (status IN ('Draft', 'Active', 'Paused', 'Closed')),
-    value_proposition text NOT NULL,
-    influenced_pipeline_millions numeric(12,2) NOT NULL DEFAULT 0 CHECK (influenced_pipeline_millions >= 0),
-    linked_campaign_count integer NOT NULL DEFAULT 0 CHECK (linked_campaign_count >= 0),
-    owner_name text NOT NULL
+DROP TABLE IF EXISTS mmf_portal.partner_plays;
+
+CREATE TABLE mmf_portal.partner_plays (
+     id BIGSERIAL PRIMARY KEY,
+     name TEXT,
+     partner_name TEXT NOT NULL,
+     partner_tier TEXT NOT NULL,
+     business_line TEXT NOT NULL,
+     theme TEXT NOT NULL,
+     eligible_country_codes TEXT[] NOT NULL,
+     status TEXT NOT NULL
+     CHECK (status IN ('Draft', 'Active', 'Paused', 'Closed')),
+     value_proposition TEXT NOT NULL,
+     influenced_pipeline_millions NUMERIC(12,2) NOT NULL DEFAULT 0 CHECK (influenced_pipeline_millions >= 0),
+     linked_campaign_count INTEGER NOT NULL DEFAULT 0 CHECK (linked_campaign_count >= 0),
+     owner_name TEXT NOT NULL,
+     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO partner_plays VALUES
+INSERT INTO mmf_portal.partner_plays VALUES
     ('SAP RISE for Mid-Market', 'SAP', 'Platinum', 'ADM', 'SAP / Cloud', ARRAY['NL','DE','UK','SE','FI'], 'Active', 'Fixed-scope RISE migration with Capgemini mid-market accelerators and SAP funding support.', 9.4, 3, 'S. de Vries'),
     ('AWS Landing Zone Fast Start', 'AWS', 'Premier', 'CIS', 'SAP / Cloud', ARRAY['DE','UK','NO','DK'], 'Active', 'Six-week landing zone with AWS MAP funding; ideal entry play for new logos.', 6.7, 3, 'K. Weber'),
     ('Microsoft Data & AI Jumpstart', 'Microsoft', 'Premier', 'I&D', 'Data & AI', ARRAY['NL','DE','UK','SE','FI','NO','DK'], 'Active', 'Fabric-based data platform starter with joint Microsoft investment and a four-week proof of value.', 8.1, 4, 'L. Murray'),
@@ -61,7 +67,7 @@ INSERT INTO partner_plays VALUES
     ('ServiceNow ITSM Consolidation', 'ServiceNow', 'Gold', 'ADM', 'Vendor Consolidation', ARRAY['NL','UK'], 'Active', 'Consolidate fragmented tooling onto a single ITSM platform with a strong cost-takeout narrative.', 3.1, 2, 'M. Jansen'),
     ('Google Cloud Modernization Sprint', 'Google Cloud', 'Silver', 'CIS', 'Enterprise Technology Modernization', ARRAY['UK','DK'], 'Draft', 'Application modernization sprint with Google funding, pending the mid-market pricing model.', 0, 0, 'R. Patel');
 
-UPDATE campaigns SET
+UPDATE mmf_portal.campaigns SET
     business_line = CASE name
         WHEN 'NL Industrial — IT Cost Takeout' THEN 'ADM' WHEN 'NL Retail — Commerce Acceleration' THEN 'DCX'
         WHEN 'DE Manufacturing — Smart Factory' THEN 'CIS' WHEN 'DE Industrial — Cost Takeout Q3' THEN 'ADM'
@@ -80,8 +86,8 @@ UPDATE campaigns SET
 
 -- The latest prototype has 29 unique agents. Duplicate lifecycle placements are UI metadata;
 -- this table stores one catalogue record per agent and its displayed launch count.
-TRUNCATE smart_agents CASCADE;
-INSERT INTO smart_agents (name, lifecycle_stage, agent_type, status, version, description, grounding_sources, owner_team, best_used_for, launches_this_quarter) VALUES
+TRUNCATE mmf_portal.smart_agents CASCADE;
+INSERT INTO mmf_portal.smart_agents (name, lifecycle_stage, agent_type, status, version, description, grounding_sources, owner_team, best_used_for, launches_this_quarter) VALUES
     ('Intelio', 'Client intelligence', 'Internal', 'Published', 'v1.0', 'Creates a 360-degree client intelligence view including business context, sector trends, financials, technology priorities and opportunity hypotheses.', ARRAY['Radar signals','Public web'], 'Clients & Innovation', 'Account planning, first outreach, meeting preparation and opportunity shaping.', 64),
     ('BritMap', 'Client intelligence', 'Internal', 'Published', 'v1.0', 'Builds UK-focused BuyerMaps, decision-maker context and likely opportunity areas.', ARRAY['Radar signals','Public web'], 'Clients & Innovation', 'UK mid-market account intelligence and targeted sales engagement.', 22),
     ('Helder', 'Client intelligence', 'Internal', 'Published', 'v1.0', 'Creates concise BuyerMaps for Netherlands mid-market clients.', ARRAY['Radar signals','Public web'], 'Clients & Innovation', 'Netherlands teams preparing account meetings.', 18),
@@ -112,8 +118,8 @@ INSERT INTO smart_agents (name, lifecycle_stage, agent_type, status, version, de
     ('Proposal Development', 'RFP / bid support', 'Internal', 'Published', 'v1.0', 'Creates structured proposal documents from RFP content.', ARRAY['Uploaded RFP'], 'Proposal Centre', 'Accelerating drafting.', 26),
     ('FAQ / Response Draft - UK', 'RFP / bid support', 'Internal', 'Published', 'v1.0', 'Finds standard responses and bid essentials from UK knowledge sources.', ARRAY['Solutions & Assets (RAG)'], 'Wincentre', 'Questionnaires, FAQs and standard response drafting.', 11);
 
-DELETE FROM kpi_snapshots;
-INSERT INTO kpi_snapshots (as_of, business_unit_code, country_name, pipeline_millions, revenue_millions, coverage_percent, reuse_percent, signal_count, signal_conversion_percent, outreach_count, meeting_count, opportunities_created, stage_conversion_percent, pipeline_target_millions, revenue_target_millions, coverage_target_percent, client_count, target_account_count, active_account_count, active_campaign_count, active_partner_play_count, key_asset_count, smart_agent_count, qualified_lead_count, bookings_target_millions) VALUES
+DELETE FROM mmf_portal.kpi_snapshots;
+INSERT INTO mmf_portal.kpi_snapshots (as_of, business_unit_code, country_name, pipeline_millions, revenue_millions, coverage_percent, reuse_percent, signal_count, signal_conversion_percent, outreach_count, meeting_count, opportunities_created, stage_conversion_percent, pipeline_target_millions, revenue_target_millions, coverage_target_percent, client_count, target_account_count, active_account_count, active_campaign_count, active_partner_play_count, key_asset_count, smart_agent_count, qualified_lead_count, bookings_target_millions) VALUES
     ('2026-08-11 02:00:00+02', 'NL', NULL, 38.4, 45.0, 62, 71, 92, 7, 31, 12, 12, 31, 50, 60, 70, 150, 50, 31, 4, 12, 55, 29, 7, 60),
     ('2026-08-11 02:00:00+02', 'DE', NULL, 47.1, 52.6, 64, 68, 118, 11, 41, 18, 18, 36, 60, 70, 70, 210, 64, 41, 5, 9, 62, 29, 11, 70),
     ('2026-08-11 02:00:00+02', 'UK', NULL, 33.7, 38.2, 53, 64, 87, 8, 29, 14, 14, 34, 45, 55, 65, 180, 55, 29, 4, 8, 48, 29, 8, 55),

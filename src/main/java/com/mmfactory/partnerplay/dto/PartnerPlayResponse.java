@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record PartnerPlayResponse(
+        Long id,
         String name,
         String partnerName,
         String partnerTier,

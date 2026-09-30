@@ -13,6 +13,7 @@ public final class PartnerPlayMapper {
     public static PartnerPlayResponse toResponse(PartnerPlay entity) {
 
         return new PartnerPlayResponse(
+                entity.getId(),
                 entity.getName(),
                 entity.getPartnerName(),
                 entity.getPartnerTier(),

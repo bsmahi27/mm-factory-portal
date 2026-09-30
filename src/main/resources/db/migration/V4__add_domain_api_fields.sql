@@ -1,5 +1,5 @@
 -- Persist the aggregate state introduced by the v1.1 REST and GraphQL contracts.
-ALTER TABLE assets
+ALTER TABLE mmf_portal.assets
     ADD COLUMN source_type text NOT NULL DEFAULT 'Repository link'
         CHECK (source_type IN ('Uploaded file', 'Repository link', 'External link')),
     ADD COLUMN repository_name text,
@@ -12,14 +12,14 @@ ALTER TABLE assets
         CHECK (lifecycle_state IN ('Draft', 'Submitted', 'Certified', 'In refresh', 'Re-certified', 'Retired')),
     ADD COLUMN visibility_scopes text[] NOT NULL DEFAULT '{}';
 
-UPDATE assets
+UPDATE mmf_portal.assets
 SET lifecycle_state = CASE certification_status
     WHEN 'Certified & Published' THEN 'Certified'
     WHEN 'Submitted' THEN 'Submitted'
     ELSE 'Draft'
 END;
 
-ALTER TABLE radar_engines
+ALTER TABLE mmf_portal.radar_engines
     ADD COLUMN prospect_set text NOT NULL DEFAULT 'Target prospects'
         CHECK (prospect_set IN ('Target prospects', 'Active campaign accounts', 'Qualified leads', 'Full mid-market master', 'Custom upload')),
     ADD COLUMN source_keys text[] NOT NULL DEFAULT '{}',
@@ -29,44 +29,44 @@ ALTER TABLE radar_engines
     ADD COLUMN minimum_score smallint NOT NULL DEFAULT 70 CHECK (minimum_score BETWEEN 0 AND 100),
     ADD COLUMN auto_link_campaigns boolean NOT NULL DEFAULT true;
 
-CREATE TABLE radar_runs (
+CREATE TABLE mmf_portal.radar_runs (
     id uuid PRIMARY KEY,
-    engine_name text NOT NULL REFERENCES radar_engines(name) ON DELETE CASCADE,
+    engine_name text NOT NULL REFERENCES mmf_portal.radar_engines(name) ON DELETE CASCADE,
     status text NOT NULL CHECK (status IN ('Accepted', 'Running', 'Completed', 'Failed')),
     requested_at timestamptz NOT NULL,
     completed_at timestamptz,
     failure_message text
 );
 
-ALTER TABLE smart_agents
+ALTER TABLE mmf_portal.smart_agents
     ADD COLUMN platform text,
     ADD COLUMN launch_url text,
     ADD COLUMN visibility_scopes text[] NOT NULL DEFAULT '{}',
     ADD COLUMN recommended_trigger_categories text[] NOT NULL DEFAULT '{}';
 
-CREATE TABLE agent_launches (
+CREATE TABLE mmf_portal.agent_launches (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    agent_name text NOT NULL REFERENCES smart_agents(name),
+    agent_name text NOT NULL REFERENCES mmf_portal.smart_agents(name),
     launched_at timestamptz NOT NULL,
     launched_by text NOT NULL,
     account_name text,
-    prospect_id text REFERENCES prospects(id),
-    opportunity_id text REFERENCES opportunities(id),
-    signal_id bigint REFERENCES radar_signals(id),
-    campaign_name text REFERENCES campaigns(name)
+    prospect_id text REFERENCES mmf_portal.prospects(id),
+    opportunity_id text REFERENCES mmf_portal.opportunities(id),
+    signal_id bigint REFERENCES mmf_portal.radar_signals(id),
+    campaign_name text REFERENCES mmf_portal.campaigns(name)
 );
 
-CREATE TABLE campaign_partner_plays (
+CREATE TABLE mmf_portal.campaign_partner_plays (
     campaign_name text NOT NULL REFERENCES campaigns(name) ON DELETE CASCADE,
-    partner_play_name text NOT NULL REFERENCES partner_plays(name),
+    partner_play_name text NOT NULL REFERENCES mmf_portal.partner_plays(name),
     linked_at timestamptz NOT NULL DEFAULT now(),
     linked_by text NOT NULL DEFAULT 'migration',
     PRIMARY KEY (campaign_name, partner_play_name)
 );
 
-INSERT INTO campaign_partner_plays (campaign_name, partner_play_name)
+INSERT INTO mmf_portal.campaign_partner_plays (campaign_name, partner_play_name)
 SELECT c.name, p.name
-FROM campaigns c
-JOIN partner_plays p ON p.partner_name = c.partner_name
+FROM mmf_portal.campaigns cc
+JOIN mmf_portal.partner_plays p ON p.partner_name = c.partner_name
 WHERE c.partner_name IS NOT NULL
 ON CONFLICT DO NOTHING;

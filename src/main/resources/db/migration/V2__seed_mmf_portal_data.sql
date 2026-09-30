@@ -1,20 +1,20 @@
 -- Illustrative development data migrated from database/seed.sql.
 -- This migration intentionally runs once; do not place mutable test data here.
-INSERT INTO business_units (code, name, has_countries) VALUES
+INSERT INTO mmf_portal.business_units (code, name, has_countries) VALUES
     ('UK', 'UK', false),
     ('DE', 'Germany', false),
     ('NL', 'Netherlands', false),
     ('NO', 'Nordics', true);
 
-INSERT INTO countries (name, business_unit_code) VALUES
+INSERT INTO mmf_portal.countries (name, business_unit_code) VALUES
     ('Sweden', 'NO'), ('Finland', 'NO'), ('Norway', 'NO'), ('Denmark', 'NO');
 
-INSERT INTO portal_views (name, description, navigation) VALUES
+INSERT INTO mmf_portal.portal_views (name, description, navigation) VALUES
     ('Leadership', 'Executive performance, BU/SBU roll-ups, objectives, pipeline and campaign outcomes', '["dashboard","prospects","campaigns","governance","scope"]'),
     ('Factory / Operations', 'Campaign, prospect, asset, trigger, agent and governance operations', '["dashboard","prospects","campaigns","solutions","radar","agents","governance","admin","scope"]'),
     ('Seller', 'Assigned prospects and accounts, signals, interactions, campaigns, opportunities and Smart Agents', '["dashboard","prospects","campaigns","solutions","radar","agents","scope"]');
 
-INSERT INTO roles (name, rights_description, portal_view_name) VALUES
+INSERT INTO mmf_portal.roles (name, rights_description, portal_view_name) VALUES
     ('SBU Factory Leader', 'Read-all roll-up across BUs; owns shared/SBU objectives and SBU governance', 'Leadership'),
     ('BU Factory Leader', 'Owns Factory activation for their BU: solutions, campaigns, triggers and BU governance', 'Factory / Operations'),
     ('BU MM (Business) Leader', 'Owns BU targets, accounts, target lists and team; chairs the BU joint plan', 'Leadership'),
@@ -25,11 +25,11 @@ INSERT INTO roles (name, rights_description, portal_view_name) VALUES
     ('Factory Solution & Assets Lead', 'Owns the Solutions & Assets library; certifies and publishes', 'Factory / Operations'),
     ('Admin', 'Manages users, roles, permissions, reference data, connectors and integrations', 'Factory / Operations');
 
-INSERT INTO modules (name) VALUES
+INSERT INTO mmf_portal.modules (name) VALUES
     ('Prospects'), ('Campaigns'), ('Solutions & Assets'), ('Triggers Radar'),
     ('Dashboard'), ('Governance'), ('Smart Agents'), ('Admin');
 
-INSERT INTO role_permissions (role_name, module_name, access_level)
+INSERT INTO mmf_portal.role_permissions (role_name, module_name, access_level)
 SELECT role_name, module_name,
        CASE raw_access WHEN '—' THEN 'NONE' WHEN 'RW*' THEN 'RW_CERTIFY' ELSE raw_access END
 FROM (VALUES
@@ -49,7 +49,7 @@ JOIN (VALUES
     (5, 'Dashboard'), (6, 'Governance'), (7, 'Smart Agents'), (8, 'Admin')
 ) AS module_rows(position, module_name) USING (position);
 
-INSERT INTO accounts (name, business_unit_code, country_name, sector, tier, owner_name, source) VALUES
+INSERT INTO mmf_portal.accounts (name, business_unit_code, country_name, sector, tier, owner_name, source) VALUES
     ('Albion Foods', 'UK', NULL, 'CPG', 1, 'R. Patel', 'Salesforce'),
     ('Thames Utilities', 'UK', NULL, 'E&U', 1, 'R. Patel', 'Salesforce'),
     ('Pennine Manufacturing', 'UK', NULL, 'Manufacturing', 2, 'L. Murray', 'Portal upload'),
@@ -71,7 +71,7 @@ INSERT INTO accounts (name, business_unit_code, country_name, sector, tier, owne
     ('Fjord Energy ASA', 'NO', 'Norway', 'E&U', 1, 'E. Hansen', 'Portal upload'),
     ('Copenhagen Logistics', 'NO', 'Denmark', 'Transport', 2, 'N. Sørensen', 'Portal upload');
 
-INSERT INTO prospect_upload_batches
+INSERT INTO mmf_portal.prospect_upload_batches
     (id, file_name, business_unit_code, uploaded_by, uploaded_at, row_count, accepted_count, rejected_count, status)
 VALUES
     ('BATCH-0007', 'UK_manufacturing_wave2.xlsx', 'UK', 'R. Patel', '2026-09-01 09:00:00+02', 44, 38, 6, 'Validated - awaiting commit'),
@@ -79,7 +79,7 @@ VALUES
     ('BATCH-0005', 'NL_target_list_H2.xlsx', 'NL', 'S. de Vries', '2026-08-25 09:00:00+02', 62, 58, 4, 'Committed'),
     ('BATCH-0004', 'DE_industrial_targets.xlsx', 'DE', 'K. Weber', '2026-08-18 09:00:00+02', 81, 74, 7, 'Committed');
 
-INSERT INTO prospect_upload_records (batch_id, row_number, company_name, result, reason) VALUES
+INSERT INTO mmf_portal.prospect_upload_records (batch_id, row_number, company_name, result, reason) VALUES
     ('BATCH-0007', 3, 'Yorkshire Precision Ltd', 'Accepted', NULL),
     ('BATCH-0007', 4, 'Tyne Components plc', 'Accepted', NULL),
     ('BATCH-0007', 19, 'Midlands Tooling', 'Rejected', 'Sector code missing - must match the governed Industry list'),
@@ -89,7 +89,7 @@ INSERT INTO prospect_upload_records (batch_id, row_number, company_name, result,
     ('BATCH-0007', 33, 'Solent Marine Ltd', 'Rejected', 'Estimated TCV is not numeric'),
     ('BATCH-0007', 38, 'Anglia Foods Ltd', 'Rejected', 'Country supplied for a BU that is not split');
 
-INSERT INTO prospects
+INSERT INTO mmf_portal.prospects
     (id, account_name, business_unit_code, country_name, industry, estimated_tcv_millions, lifecycle_stage, owner_name, expected_signing_quarter, source, upload_batch_id, qualification_status)
 VALUES
     ('PRS-UK-00013', 'Pennine Manufacturing', 'UK', NULL, 'Manufacturing', 2.2, 'Research', 'L. Murray', 'Q1-2027', 'Excel upload', 'BATCH-0007', 'In research'),
@@ -110,7 +110,7 @@ VALUES
     ('PRS-NO-00003', 'Fjord Energy ASA', 'NO', 'Norway', 'E&U', 3.9, 'Meetings Scheduled / Delivered', 'E. Hansen', 'Q1-2027', 'Single form', NULL, 'Engaged'),
     ('PRS-NO-00002', 'Copenhagen Logistics', 'NO', 'Denmark', 'Transport', 1.6, 'Outreach', 'N. Sørensen', 'Q1-2027', 'Excel upload', 'BATCH-0006', 'Contacted');
 
-INSERT INTO prospect_interactions
+INSERT INTO mmf_portal.prospect_interactions
     (prospect_id, interaction_type, interaction_date, seller_name, notes, next_action, status, due_date)
 VALUES
     ('PRS-DE-00042', 'Meeting delivered', '2026-08-21', 'K. Weber', 'CIO confirmed the plant modernization programme; legacy ERP named as the blocker.', 'Send value case and book a workshop', 'Closed', '2026-08-28'),
@@ -119,7 +119,7 @@ VALUES
     ('PRS-NL-00024', 'Meeting delivered', '2026-08-28', 'S. de Vries', 'Tender for application support consolidation confirmed, closing in five weeks.', 'Assemble bid team', 'Open', '2026-09-04'),
     ('PRS-NO-00004', 'Outreach', '2026-08-19', 'M. Virtanen', 'Efficiency programme announced; shared services in scope.', 'Request discovery session', 'Open', '2026-09-08');
 
-INSERT INTO solutions (name, solution_class, tags, maturity, certification_status, reuse_count) VALUES
+INSERT INTO mmf_portal.solutions (name, solution_class, tags, maturity, certification_status, reuse_count) VALUES
     ('IT Cost Takeout', 'Cross-Business Line', ARRAY['ADM','CIS'], 'Industrialized', 'Certified & Published', 34),
     ('SAP S/4 Rapid Migration', 'Business Line', ARRAY['ADM'], 'Industrialized', 'Certified & Published', 41),
     ('Hyperscaler Landing Zone', 'Cross-Business Line', ARRAY['CIS','I&D'], 'Industrialized', 'Certified & Published', 28),
@@ -129,7 +129,7 @@ INSERT INTO solutions (name, solution_class, tags, maturity, certification_statu
     ('Vendor Consolidation Play', 'Cross-Business Line', ARRAY['ADM','CIS'], 'In-Development', 'Submitted', 12),
     ('Cyber Baseline for Mid-Market', 'Cross-Business Line', ARRAY['CIS'], 'Draft', 'Draft', 3);
 
-INSERT INTO radar_engines (name, business_unit_code, client_count, rule_count, schedule, signal_count) VALUES
+INSERT INTO mmf_portal.radar_engines (name, business_unit_code, client_count, rule_count, schedule, signal_count) VALUES
     ('UK · Manufacturing & CPG', 'UK', 24, 5, 'Daily', 13),
     ('UK · Energy & Utilities', 'UK', 14, 4, 'Daily', 7),
     ('Germany · Industrial', 'DE', 28, 7, 'Daily', 18),
@@ -139,7 +139,7 @@ INSERT INTO radar_engines (name, business_unit_code, client_count, rule_count, s
     ('Nordics · Industrial', 'NO', 18, 4, 'Daily', 8),
     ('Nordics · Energy', 'NO', 12, 3, 'Daily', 5);
 
-INSERT INTO campaigns
+INSERT INTO mmf_portal.campaigns
     (name, business_unit_code, country_name, status, solution_name, radar_engine_name, owner_name, approver_name, start_date, end_date, target_account_count, accounts_reached, outreach_count, meeting_count, pipeline_millions, opportunities_generated, wins_millions, signal_driven)
 VALUES
     ('UK Manufacturing — ADM Reboot', 'UK', NULL, 'Active', 'IT Cost Takeout', 'UK · Manufacturing & CPG', 'R. Patel', 'UK MM Leader', '2026-06-20', '2026-09-12', 13, 7, 64, 9, 5.5, 2, 0, true),
@@ -160,7 +160,7 @@ VALUES
     ('NO Energy — Cloud Foundation', 'NO', 'Norway', 'Active', 'Hyperscaler Landing Zone', 'Nordics · Energy', 'E. Hansen', 'Nordics MM Leader', '2026-07-01', '2026-09-10', 7, 4, 29, 4, 2.6, 1, 0, true),
     ('DK Transport — Modernization', 'NO', 'Denmark', 'Planned', 'IT Cost Takeout', NULL, 'N. Sørensen', 'Nordics MM Leader', '2026-09-10', '2026-12-05', 6, 0, 0, 0, 0, 0, 0, false);
 
-INSERT INTO opportunities
+INSERT INTO mmf_portal.opportunities
     (id, name, account_name, business_unit_code, country_name, industry, value_millions, stage, owner_name, close_date, status, is_mm_factory, solution_name, probability_percent, competitor, prospect_id)
 VALUES
     ('0061t00000AbcU1', 'Albion — SAP S/4', 'Albion Foods', 'UK', NULL, 'CPG', 5.5, 'Proposal', 'R. Patel', '2027-02-10', 'Open', true, 'SAP S/4 Rapid Migration', 45, 'IBM', 'PRS-UK-00021'),
@@ -179,93 +179,93 @@ VALUES
     ('0061t00000AbfP1', 'Fjord Energy — Cloud foundation', 'Fjord Energy ASA', 'NO', 'Norway', 'E&U', 2.6, 'Qualify', 'E. Hansen', '2027-03-22', 'Open', false, 'Hyperscaler Landing Zone', 35, 'Sopra Steria', NULL),
     ('0061t00000AbfP5', 'Copenhagen Logistics — Modernization', 'Copenhagen Logistics', 'NO', 'Denmark', 'Transport', 2.1, 'Proposal', 'N. Sørensen', '2027-02-05', 'Open', true, 'IT Cost Takeout', 45, NULL, NULL);
 
-INSERT INTO assets (name, asset_type, version, certification_status, solution_name, carve_out_ready) VALUES
-    ('Cost takeout — solution blueprint', 'Blueprint', 'v3', 'Certified & Published', 'IT Cost Takeout', true),
-    ('Cost takeout — value case model', 'Reusable template', 'v2', 'Certified & Published', 'IT Cost Takeout', true),
-    ('Reference win — NordChem', 'Case study', 'v1', 'Certified & Published', 'IT Cost Takeout', false),
-    ('Cost takeout — client pitch deck', 'Deck', 'v4', 'Certified & Published', 'IT Cost Takeout', false),
-    ('S/4 readiness assessment', 'Reusable template', 'v2', 'Certified & Published', 'SAP S/4 Rapid Migration', true),
-    ('S/4 migration blueprint', 'Blueprint', 'v5', 'Certified & Published', 'SAP S/4 Rapid Migration', true),
-    ('S/4 RFP response library', 'RFP response', 'v3', 'Certified & Published', 'SAP S/4 Rapid Migration', false),
-    ('Landing zone reference architecture', 'Blueprint', 'v3', 'Certified & Published', 'Hyperscaler Landing Zone', true),
-    ('Landing zone proof-of-value pack', 'Reusable template', 'v1', 'Certified & Published', 'Hyperscaler Landing Zone', true),
-    ('Smart factory reference architecture', 'Blueprint', 'v2', 'Certified & Published', 'Manufacturing Smart Factory', true),
-    ('Grid data platform — case study', 'Case study', 'v1', 'Certified & Published', 'E&U Grid Data Platform', false),
-    ('Commerce accelerator demo pack', 'Deck', 'v2', 'Submitted', 'Retail Commerce Accelerator', false),
-    ('Vendor consolidation battle card', 'Reusable template', 'v1', 'Submitted', 'Vendor Consolidation Play', true),
-    ('Cyber baseline offer 1-pager', 'Deck', 'v1', 'Draft', 'Cyber Baseline for Mid-Market', false);
+INSERT INTO mmf_portal.assets (name, asset_type, version, certification_status, solution_name, carve_out_ready) VALUES
+('Cost takeout — solution blueprint', 'Blueprint', 'v3', 'Certified & Published', 'IT Cost Takeout', true),
+('Cost takeout — value case model', 'Reusable template', 'v2', 'Certified & Published', 'IT Cost Takeout', true),
+('Reference win — NordChem', 'Case study', 'v1', 'Certified & Published', 'IT Cost Takeout', false),
+('Cost takeout — client pitch deck', 'Deck', 'v4', 'Certified & Published', 'IT Cost Takeout', false),
+('S/4 readiness assessment', 'Reusable template', 'v2', 'Certified & Published', 'SAP S/4 Rapid Migration', true),
+('S/4 migration blueprint', 'Blueprint', 'v5', 'Certified & Published', 'SAP S/4 Rapid Migration', true),
+('S/4 RFP response library', 'RFP response', 'v3', 'Certified & Published', 'SAP S/4 Rapid Migration', false),
+('Landing zone reference architecture', 'Blueprint', 'v3', 'Certified & Published', 'Hyperscaler Landing Zone', true),
+('Landing zone proof-of-value pack', 'Reusable template', 'v1', 'Certified & Published', 'Hyperscaler Landing Zone', true),
+('Smart factory reference architecture', 'Blueprint', 'v2', 'Certified & Published', 'Manufacturing Smart Factory', true),
+('Grid data platform — case study', 'Case study', 'v1', 'Certified & Published', 'E&U Grid Data Platform', false),
+('Commerce accelerator demo pack', 'Deck', 'v2', 'Submitted', 'Retail Commerce Accelerator', false),
+('Vendor consolidation battle card', 'Reusable template', 'v1', 'Submitted', 'Vendor Consolidation Play', true),
+('Cyber baseline offer 1-pager', 'Deck', 'v1', 'Draft', 'Cyber Baseline for Mid-Market', false);
 
-INSERT INTO play_templates (name, channel, step_count, solution_name) VALUES
-    ('Cost Takeout outreach sequence', 'Email', 4, 'IT Cost Takeout'),
-    ('Value workshop play', 'Direct', 3, 'IT Cost Takeout'),
-    ('S/4 readiness assessment play', 'Direct', 3, 'SAP S/4 Rapid Migration'),
-    ('Landing-zone proof of value', 'Webinar', 5, 'Hyperscaler Landing Zone'),
-    ('Smart factory discovery play', 'Direct', 4, 'Manufacturing Smart Factory');
+INSERT INTO mmf_portal.play_templates (name, channel, step_count, solution_name) VALUES
+('Cost Takeout outreach sequence', 'Email', 4, 'IT Cost Takeout'),
+('Value workshop play', 'Direct', 3, 'IT Cost Takeout'),
+('S/4 readiness assessment play', 'Direct', 3, 'SAP S/4 Rapid Migration'),
+('Landing-zone proof of value', 'Webinar', 5, 'Hyperscaler Landing Zone'),
+('Smart factory discovery play', 'Direct', 4, 'Manufacturing Smart Factory');
 
-INSERT INTO campaign_playbook_parts (name, description, display_order) VALUES
-    ('Campaign Brief', 'Why now, the market context, the objective and the target segment', 1),
-    ('Messaging & Narrative', 'The story arc, proof points and the three things a seller must land', 2),
-    ('Buyer Personas', 'Who buys, who blocks, what each cares about and how they are measured', 3),
-    ('Value Proposition', 'The quantified outcome, the value case model and the reference wins', 4),
-    ('Objection Handling', 'The eight objections that recur, and the answer to each', 5);
+INSERT INTO mmf_portal.campaign_playbook_parts (name, description, display_order) VALUES
+('Campaign Brief', 'Why now, the market context, the objective and the target segment', 1),
+('Messaging & Narrative', 'The story arc, proof points and the three things a seller must land', 2),
+('Buyer Personas', 'Who buys, who blocks, what each cares about and how they are measured', 3),
+('Value Proposition', 'The quantified outcome, the value case model and the reference wins', 4),
+('Objection Handling', 'The eight objections that recur, and the answer to each', 5);
 
-INSERT INTO uploaded_target_accounts
-    (name, business_unit_code, country_name, sector, campaign_name, owner_name, salesforce_account_id, match_confidence)
+INSERT INTO mmf_portal.uploaded_target_accounts
+(name, business_unit_code, country_name, sector, campaign_name, owner_name, salesforce_account_id, match_confidence)
 VALUES
-    ('Yorkshire Precision Ltd', 'UK', NULL, 'Manufacturing', 'UK Manufacturing — ADM Reboot', 'L. Murray', NULL, 'Medium'),
-    ('Tyne Components plc', 'UK', NULL, 'Manufacturing', 'UK Manufacturing — ADM Reboot', 'L. Murray', NULL, 'Low'),
-    ('Sachsen Logistik', 'DE', NULL, 'Transport', 'DE Industrial — Cost Takeout Q3', 'T. Schmidt', NULL, 'Medium'),
-    ('Munich Retail Group', 'DE', NULL, 'Retail', 'DE Retail — Commerce Push', 'T. Schmidt', '0011t00000XyZ12', 'High'),
-    ('Van Oord Logistics', 'NL', NULL, 'Transport', 'NL Industrial — IT Cost Takeout', 'J. Bakker', NULL, 'High'),
-    ('Vasa Retail AB', 'NO', 'Sweden', 'Retail', 'SE Industrial — Smart Factory', 'A. Lindqvist', NULL, 'Medium');
+('Yorkshire Precision Ltd', 'UK', NULL, 'Manufacturing', 'UK Manufacturing — ADM Reboot', 'L. Murray', NULL, 'Medium'),
+('Tyne Components plc', 'UK', NULL, 'Manufacturing', 'UK Manufacturing — ADM Reboot', 'L. Murray', NULL, 'Low'),
+('Sachsen Logistik', 'DE', NULL, 'Transport', 'DE Industrial — Cost Takeout Q3', 'T. Schmidt', NULL, 'Medium'),
+('Munich Retail Group', 'DE', NULL, 'Retail', 'DE Retail — Commerce Push', 'T. Schmidt', '0011t00000XyZ12', 'High'),
+('Van Oord Logistics', 'NL', NULL, 'Transport', 'NL Industrial — IT Cost Takeout', 'J. Bakker', NULL, 'High'),
+('Vasa Retail AB', 'NO', 'Sweden', 'Retail', 'SE Industrial — Smart Factory', 'A. Lindqvist', NULL, 'Medium');
 
-INSERT INTO campaign_history (campaign_name, changed_at, changed_by, change_description) VALUES
+INSERT INTO mmf_portal.campaign_history (campaign_name, changed_at, changed_by, change_description) VALUES
     ('DE Industrial — Cost Takeout Q3', '2026-08-28 09:00:00+02', 'T. Schmidt', 'Added 4 accounts from BATCH-0004 upload'),
     ('DE Industrial — Cost Takeout Q3', '2026-08-14 09:00:00+02', 'DE MM Leader', 'Status Planned → Approved → Active'),
     ('UK Manufacturing — ADM Reboot', '2026-08-26 09:00:00+02', 'R. Patel', 'End date extended to 12 Sep 2026'),
     ('UK Manufacturing — ADM Reboot', '2026-08-12 09:00:00+02', 'R. Patel', 'Objective updated after the joint plan review'),
     ('NL Retail — Commerce Acceleration', '2026-08-22 09:00:00+02', 'J. Bakker', 'Linked Radar engine Netherlands · Retail & CPG');
 
-INSERT INTO radar_signals
-    (business_unit_code, country_name, account_name, radar_engine_name, title, source, score, severity, status, summary)
+INSERT INTO mmf_portal.radar_signals
+(business_unit_code, country_name, account_name, radar_engine_name, title, source, score, severity, status, summary)
 VALUES
-    ('UK', NULL, 'Thames Utilities', 'UK · Energy & Utilities', 'Ofwat AMP8 investment plan approved', 'Regulator', 92, 'High', 'New', 'Approved capital plan releases multi-year technology spend. Grid analytics and asset data are named workstreams - direct fit for the E&U Grid Data Platform.'),
-    ('UK', NULL, 'Pennine Manufacturing', 'UK · Manufacturing & CPG', 'Private-equity acquisition completed', 'News', 85, 'High', 'New', 'A new PE owner typically drives a 100-day cost agenda. Classic entry point for IT Cost Takeout and vendor consolidation.'),
-    ('UK', NULL, 'Albion Foods', 'UK · Manufacturing & CPG', 'Named in SAP mid-market reference programme', 'Partner feed', 77, 'Medium', 'Reviewed', 'SAP is actively working the account - coordinate joint outreach around the S/4 Rapid Migration solution.'),
-    ('DE', NULL, 'Rheinwerk AG', 'Germany · Industrial', 'Announces €400M plant modernization programme', 'Press release', 96, 'High', 'New', 'Three plants over 24 months, with legacy ERP named as a constraint. Strong fit for SAP S/4 Rapid Migration plus IT Cost Takeout.'),
-    ('DE', NULL, 'NordChem', 'Germany · Industrial', 'CFO signals cost-reduction drive in H2 earnings call', 'Earnings call', 88, 'High', 'New', 'Management committed to an 8% opex reduction with IT named as a lever. Direct trigger for IT Cost Takeout outreach.'),
-    ('DE', NULL, 'BavariaTech GmbH', 'Germany · TMT & E&U', 'Hiring 40+ cloud & data engineers', 'Job boards', 81, 'Medium', 'New', 'A large AWS and data-platform hiring spike suggests a migration already in motion - landing-zone and managed-service opportunity.'),
-    ('DE', NULL, 'Munich Retail Group', 'Germany · Industrial', 'New digital commerce tender published', 'Tender database', 83, 'High', 'Reviewed', 'Public tender for commerce replatforming with a six-week deadline - the pre-tender positioning window is open now.'),
-    ('NL', NULL, 'Rotterdam FoodCo', 'Netherlands · Industrial', 'Publishes tender for application support consolidation', 'Tender database', 94, 'High', 'New', 'Open tender to consolidate five application support vendors into one, closing in five weeks. Direct match for the Vendor Consolidation Play.'),
-    ('NL', NULL, 'Amstel Retail Group', 'Netherlands · Retail & CPG', 'CFO commits to 7% opex reduction in trading update', 'Earnings call', 88, 'High', 'New', 'Management named IT and logistics as the two levers. Strong opening for IT Cost Takeout ahead of the FY planning cycle.'),
-    ('NL', NULL, 'Eindhoven Devices BV', 'Netherlands · Industrial', 'Hiring 25+ SAP and integration engineers', 'Job boards', 79, 'Medium', 'New', 'Concentrated SAP hiring suggests an S/4 programme being staffed internally - a positioning window for a managed alternative.'),
-    ('NL', NULL, 'Van Oord Logistics', 'Netherlands · Industrial', 'New Chief Digital Officer appointed', 'Leadership changes', 70, 'Medium', 'New', 'Leadership change often precedes transformation spend. Warm-intro opportunity for the account team.'),
-    ('NO', 'Sweden', 'Nordic Steel AB', 'Nordics · Industrial', 'RFI issued for OT/IT integration partner', 'Tender database', 89, 'High', 'New', 'The RFI closes in three weeks. Direct fit for the Manufacturing Smart Factory solution.'),
-    ('NO', 'Finland', 'Suomi Paper Oyj', 'Nordics · Industrial', 'Announces group-wide efficiency programme', 'Press release', 90, 'High', 'New', 'A €60M efficiency target over two years with shared services in scope - aligns to the ADM consolidation campaign already running.'),
-    ('NO', 'Norway', 'Fjord Energy ASA', 'Nordics · Energy', 'Signs strategic cloud agreement with AWS', 'Partner feed', 86, 'High', 'New', 'Commitment made, capability not yet built. A strong opening for the Hyperscaler Landing Zone solution.'),
-    ('NO', 'Denmark', 'Copenhagen Logistics', 'Nordics · Industrial', 'Recruiting Head of Enterprise Architecture', 'Job boards', 72, 'Medium', 'New', 'A senior EA hire usually precedes a modernization mandate. Time outreach for 60-90 days after the appointment.');
+('UK', NULL, 'Thames Utilities', 'UK · Energy & Utilities', 'Ofwat AMP8 investment plan approved', 'Regulator', 92, 'High', 'New', 'Approved capital plan releases multi-year technology spend. Grid analytics and asset data are named workstreams - direct fit for the E&U Grid Data Platform.'),
+('UK', NULL, 'Pennine Manufacturing', 'UK · Manufacturing & CPG', 'Private-equity acquisition completed', 'News', 85, 'High', 'New', 'A new PE owner typically drives a 100-day cost agenda. Classic entry point for IT Cost Takeout and vendor consolidation.'),
+('UK', NULL, 'Albion Foods', 'UK · Manufacturing & CPG', 'Named in SAP mid-market reference programme', 'Partner feed', 77, 'Medium', 'Reviewed', 'SAP is actively working the account - coordinate joint outreach around the S/4 Rapid Migration solution.'),
+('DE', NULL, 'Rheinwerk AG', 'Germany · Industrial', 'Announces €400M plant modernization programme', 'Press release', 96, 'High', 'New', 'Three plants over 24 months, with legacy ERP named as a constraint. Strong fit for SAP S/4 Rapid Migration plus IT Cost Takeout.'),
+('DE', NULL, 'NordChem', 'Germany · Industrial', 'CFO signals cost-reduction drive in H2 earnings call', 'Earnings call', 88, 'High', 'New', 'Management committed to an 8% opex reduction with IT named as a lever. Direct trigger for IT Cost Takeout outreach.'),
+('DE', NULL, 'BavariaTech GmbH', 'Germany · TMT & E&U', 'Hiring 40+ cloud & data engineers', 'Job boards', 81, 'Medium', 'New', 'A large AWS and data-platform hiring spike suggests a migration already in motion - landing-zone and managed-service opportunity.'),
+('DE', NULL, 'Munich Retail Group', 'Germany · Industrial', 'New digital commerce tender published', 'Tender database', 83, 'High', 'Reviewed', 'Public tender for commerce replatforming with a six-week deadline - the pre-tender positioning window is open now.'),
+('NL', NULL, 'Rotterdam FoodCo', 'Netherlands · Industrial', 'Publishes tender for application support consolidation', 'Tender database', 94, 'High', 'New', 'Open tender to consolidate five application support vendors into one, closing in five weeks. Direct match for the Vendor Consolidation Play.'),
+('NL', NULL, 'Amstel Retail Group', 'Netherlands · Retail & CPG', 'CFO commits to 7% opex reduction in trading update', 'Earnings call', 88, 'High', 'New', 'Management named IT and logistics as the two levers. Strong opening for IT Cost Takeout ahead of the FY planning cycle.'),
+('NL', NULL, 'Eindhoven Devices BV', 'Netherlands · Industrial', 'Hiring 25+ SAP and integration engineers', 'Job boards', 79, 'Medium', 'New', 'Concentrated SAP hiring suggests an S/4 programme being staffed internally - a positioning window for a managed alternative.'),
+('NL', NULL, 'Van Oord Logistics', 'Netherlands · Industrial', 'New Chief Digital Officer appointed', 'Leadership changes', 70, 'Medium', 'New', 'Leadership change often precedes transformation spend. Warm-intro opportunity for the account team.'),
+('NO', 'Sweden', 'Nordic Steel AB', 'Nordics · Industrial', 'RFI issued for OT/IT integration partner', 'Tender database', 89, 'High', 'New', 'The RFI closes in three weeks. Direct fit for the Manufacturing Smart Factory solution.'),
+('NO', 'Finland', 'Suomi Paper Oyj', 'Nordics · Industrial', 'Announces group-wide efficiency programme', 'Press release', 90, 'High', 'New', 'A €60M efficiency target over two years with shared services in scope - aligns to the ADM consolidation campaign already running.'),
+('NO', 'Norway', 'Fjord Energy ASA', 'Nordics · Energy', 'Signs strategic cloud agreement with AWS', 'Partner feed', 86, 'High', 'New', 'Commitment made, capability not yet built. A strong opening for the Hyperscaler Landing Zone solution.'),
+('NO', 'Denmark', 'Copenhagen Logistics', 'Nordics · Industrial', 'Recruiting Head of Enterprise Architecture', 'Job boards', 72, 'Medium', 'New', 'A senior EA hire usually precedes a modernization mandate. Time outreach for 60-90 days after the appointment.');
 
-INSERT INTO data_source_connectors
-    (name, connector_type, credential_reference, license_terms, is_active, used_by)
+INSERT INTO mmf_portal.data_source_connectors
+(name, connector_type, credential_reference, license_terms, is_active, used_by)
 VALUES
-    ('Open web search', 'public_web', NULL, 'Public sources', true, ARRAY['Radar','Agents']),
-    ('Company news & press releases', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
-    ('Regulatory filings', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
-    ('Tender database (EU/TED)', 'subscription', 'kv://mmf/ted-api-key', 'Seat-limited; no redistribution', true, ARRAY['Radar']),
-    ('Job boards / hiring feed', 'subscription', 'kv://mmf/hiring-feed', 'Pending procurement review', false, ARRAY['Radar']),
-    ('Leadership change monitor', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
-    ('Salesforce (CRM)', 'crm', 'kv://mmf/sfdc-jwt', 'Internal', true, ARRAY['Data model','Agents']),
-    ('Solutions & Assets index', 'in_house', 'kv://mmf/sharepoint-app', 'Internal', true, ARRAY['Agents (RAG)']);
+('Open web search', 'public_web', NULL, 'Public sources', true, ARRAY['Radar','Agents']),
+('Company news & press releases', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
+('Regulatory filings', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
+('Tender database (EU/TED)', 'subscription', 'kv://mmf/ted-api-key', 'Seat-limited; no redistribution', true, ARRAY['Radar']),
+('Job boards / hiring feed', 'subscription', 'kv://mmf/hiring-feed', 'Pending procurement review', false, ARRAY['Radar']),
+('Leadership change monitor', 'public_web', NULL, 'Public sources', true, ARRAY['Radar']),
+('Salesforce (CRM)', 'crm', 'kv://mmf/sfdc-jwt', 'Internal', true, ARRAY['Data model','Agents']),
+('Solutions & Assets index', 'in_house', 'kv://mmf/sharepoint-app', 'Internal', true, ARRAY['Agents (RAG)']);
 
-INSERT INTO smart_agents (name, lifecycle_stage, agent_type, status, version, description, grounding_sources) VALUES
-    ('Client Intelligence', 'Prospecting', 'Internal', 'Published', 'v2.1', 'Account briefing built from Salesforce, Radar signals and the open web.', ARRAY['Salesforce','Radar signals','Public web']),
-    ('Meeting Preparation', 'Engagement', 'Internal', 'Published', 'v1.4', 'Pre-meeting brief: context, attendees, talking points and likely objections.', ARRAY['Salesforce','Solutions & Assets (RAG)','Radar signals']),
-    ('RFP / Bid Summary', 'Bidding', 'External', 'Published', 'v3.0', 'Summarizes an RFP into requirements, a fit assessment, risks and a response outline.', ARRAY['Uploaded RFP','Solutions & Assets (RAG)']),
-    ('Solutioning', 'Shaping', 'Internal', 'Published', 'v2.0', 'Proposes a solution shape from Factory offers and certified assets.', ARRAY['Solutions & Assets (RAG)']),
-    ('Pre-Tender', 'Prospecting', 'External', 'In-Test', 'v0.9', 'Positions ahead of an upcoming tender using public procurement signals.', ARRAY['Public web (tenders)','Radar signals']),
-    ('Case Study', 'Shaping / Bidding', 'Internal', 'Published', 'v1.2', 'Surfaces the most relevant proof points and drafts a tailored reference story.', ARRAY['Solutions & Assets (RAG)']);
+INSERT INTO mmf_portal.smart_agents (name, lifecycle_stage, agent_type, status, version, description, grounding_sources) VALUES
+('Client Intelligence', 'Prospecting', 'Internal', 'Published', 'v2.1', 'Account briefing built from Salesforce, Radar signals and the open web.', ARRAY['Salesforce','Radar signals','Public web']),
+('Meeting Preparation', 'Engagement', 'Internal', 'Published', 'v1.4', 'Pre-meeting brief: context, attendees, talking points and likely objections.', ARRAY['Salesforce','Solutions & Assets (RAG)','Radar signals']),
+('RFP / Bid Summary', 'Bidding', 'External', 'Published', 'v3.0', 'Summarizes an RFP into requirements, a fit assessment, risks and a response outline.', ARRAY['Uploaded RFP','Solutions & Assets (RAG)']),
+('Solutioning', 'Shaping', 'Internal', 'Published', 'v2.0', 'Proposes a solution shape from Factory offers and certified assets.', ARRAY['Solutions & Assets (RAG)']),
+('Pre-Tender', 'Prospecting', 'External', 'In-Test', 'v0.9', 'Positions ahead of an upcoming tender using public procurement signals.', ARRAY['Public web (tenders)','Radar signals']),
+('Case Study', 'Shaping / Bidding', 'Internal', 'Published', 'v1.2', 'Surfaces the most relevant proof points and drafts a tailored reference story.', ARRAY['Solutions & Assets (RAG)']);
 
-INSERT INTO agent_usage_metrics
+INSERT INTO mmf_portal.agent_usage_metrics
     (agent_name, measured_at, invocation_count, distinct_user_count, average_rating, output_count, invocations_by_business_unit, invocations_by_country, invocations_by_role, trend, feedback)
 VALUES
     ('Meeting Preparation', '2026-09-02 08:12:00+02', 412, 38, 4.5, 398, '{"UK":96,"DE":141,"NL":104,"NO":71}', '{"Sweden":28,"Finland":19,"Norway":14,"Denmark":10}', '{"Seller / Client Partner":301,"Campaign Lead":58,"Solution Architect / SME":33,"BU MM (Business) Leader":20}', '+18%', 'Fastest way to walk in prepared. Attendee section is the best part.'),
@@ -275,53 +275,53 @@ VALUES
     ('Case Study', '2026-08-29 14:52:00+02', 121, 26, 3.9, 118, '{"UK":31,"DE":38,"NL":32,"NO":20}', '{"Sweden":8,"Finland":5,"Norway":4,"Denmark":3}', '{"Seller / Client Partner":74,"Solution Architect / SME":31,"Campaign Lead":16}', '+6%', 'Finds the right references; the drafted story needs a rewrite.'),
     ('Pre-Tender', '2026-08-27 09:18:00+02', 47, 9, 3.6, 44, '{"UK":16,"DE":14,"NL":11,"NO":6}', '{"Sweden":2,"Finland":2,"Norway":1,"Denmark":1}', '{"Seller / Client Partner":29,"Campaign Lead":12,"Factory Agentic Lead":6}', 'new', 'Promising, but tender coverage is patchy outside the UK.');
 
-INSERT INTO governance_councils
+INSERT INTO mmf_portal.governance_councils
     (name, cadence, scope, next_meeting_date, chair_role, decision_count, action_count)
 VALUES
     ('Quarterly SBU Steering', 'Quarterly', 'SBU', '2026-10-02', 'SBU Factory Leader', 4, 6),
     ('Monthly BU GTM Squad', 'Monthly', 'BU', '2026-09-05', 'BU MM Leader', 3, 8),
     ('Weekly Deal & Solutions Review', 'Weekly', 'BU', '2026-09-05', 'BU Factory Leader', 2, 5);
 
-INSERT INTO governance_meetings
+INSERT INTO mmf_portal.governance_meetings
     (council_name, meeting_date, attendees, notes, decision_count, action_count)
 VALUES
     ('Monthly BU GTM Squad', '2026-08-05', 'BU MM Leader, BU Factory Leader, Campaign Lead, 3 sellers', 'Reviewed Q3 campaign pipeline. Cost Takeout ahead of plan; Commerce Push behind on meetings. Agreed to move two sellers onto the tender response.', 2, 3),
     ('Weekly Deal & Solutions Review', '2026-08-29', 'Solution Architect, 4 sellers, BU Factory Leader', 'Rheinwerk workshop pack reviewed and approved. Rotterdam tender: bid/no-bid taken as bid, subject to partner confirmation.', 1, 2),
     ('Quarterly SBU Steering', '2026-07-03', 'SBU Factory Leader, 4 BU MM Leaders', 'Q3 objectives set per BU. Agreed the daily Salesforce sync cadence for MVP and deferred the Cyber Baseline solution to Q4.', 3, 4);
 
-INSERT INTO governance_decisions (decision, owner_name, decision_date, status, reference_type) VALUES
+INSERT INTO mmf_portal.governance_decisions (decision, owner_name, decision_date, status, reference_type) VALUES
     ('Approve SAP S/4 Wave 1 campaign for UK CPG', 'UK MM Leader', '2026-08-28', 'Ratified', 'Campaign'),
     ('Certify Retail Commerce Accelerator at In-Development', 'Factory S&A Lead', '2026-08-21', 'Ratified', 'Solution'),
     ('Bid on the Rotterdam FoodCo consolidation tender', 'BU Factory Leader', '2026-08-29', 'Ratified', 'Prospect'),
     ('Defer Cyber Baseline solution to Q4', 'SBU Factory Leader', '2026-07-03', 'Open', 'Solution'),
     ('Adopt daily Salesforce sync cadence for MVP', 'SBU Factory Leader', '2026-07-03', 'Ratified', NULL);
 
-INSERT INTO governance_actions (action, owner_name, due_date, status) VALUES
-    ('Finalize Q4 target accounts for the Industrial engine', 'BU MM Leader', '2026-09-12', 'Open'),
-    ('Certify Retail Commerce Accelerator assets', 'Factory S&A Lead', '2026-09-19', 'Open'),
-    ('Register the tender-database subscription source', 'Factory Agentic Lead', '2026-09-26', 'Open'),
-    ('Confirm sector/segment taxonomy as reference data', 'Admin', '2026-09-30', 'Open'),
-    ('Assemble the Rotterdam tender bid team', 'BU Factory Leader', '2026-09-04', 'Open'),
-    ('Configure E&U engine subscription source', 'Factory Agentic Lead', '2026-08-22', 'Closed');
+INSERT INTO mmf_portal.governance_actions (action, owner_name, due_date, status) VALUES
+('Finalize Q4 target accounts for the Industrial engine', 'BU MM Leader', '2026-09-12', 'Open'),
+('Certify Retail Commerce Accelerator assets', 'Factory S&A Lead', '2026-09-19', 'Open'),
+('Register the tender-database subscription source', 'Factory Agentic Lead', '2026-09-26', 'Open'),
+('Confirm sector/segment taxonomy as reference data', 'Admin', '2026-09-30', 'Open'),
+('Assemble the Rotterdam tender bid team', 'BU Factory Leader', '2026-09-04', 'Open'),
+('Configure E&U engine subscription source', 'Factory Agentic Lead', '2026-08-22', 'Closed');
 
-INSERT INTO raci_assignments (activity, responsible, accountable, consulted, informed) VALUES
-    ('Set BU quarterly objectives & targets', 'BU MM Leader', 'SBU Factory Leader', 'BU Factory Leader', 'Sellers'),
-    ('Create & upload target prospects', 'Seller', 'BU MM Leader', 'Campaign Lead', 'BU Factory Leader'),
-    ('Qualify & convert a prospect', 'Seller', 'BU MM Leader', 'Solution Architect', 'Campaign Lead'),
-    ('Build & industrialize solutions/assets', 'Solution Architect', 'Factory S&A Lead', 'BU Factory Leader', 'BU MM Leader'),
-    ('Certify & publish solution/asset', 'Factory S&A Lead', 'Factory S&A Lead', 'Solution Architect', 'BUs'),
-    ('Configure radar engines & rules', 'Factory Agentic Lead', 'BU Factory Leader', 'Sellers', 'BU MM Leader'),
-    ('Plan & approve a campaign', 'Campaign Lead', 'BU MM Leader', 'Solution Architect', 'Sellers'),
-    ('Execute campaign / work accounts', 'Seller', 'Campaign Lead', 'Factory Agentic Lead', 'BU MM Leader'),
-    ('Author/register & govern agents', 'Factory Agentic Lead', 'Factory Agentic Lead', 'Admin', 'Sellers'),
-    ('Manage users, roles & connectors', 'Admin', 'Admin', '—', 'All');
+INSERT INTO mmf_portal.raci_assignments (activity, responsible, accountable, consulted, informed) VALUES
+('Set BU quarterly objectives & targets', 'BU MM Leader', 'SBU Factory Leader', 'BU Factory Leader', 'Sellers'),
+('Create & upload target prospects', 'Seller', 'BU MM Leader', 'Campaign Lead', 'BU Factory Leader'),
+('Qualify & convert a prospect', 'Seller', 'BU MM Leader', 'Solution Architect', 'Campaign Lead'),
+('Build & industrialize solutions/assets', 'Solution Architect', 'Factory S&A Lead', 'BU Factory Leader', 'BU MM Leader'),
+('Certify & publish solution/asset', 'Factory S&A Lead', 'Factory S&A Lead', 'Solution Architect', 'BUs'),
+('Configure radar engines & rules', 'Factory Agentic Lead', 'BU Factory Leader', 'Sellers', 'BU MM Leader'),
+('Plan & approve a campaign', 'Campaign Lead', 'BU MM Leader', 'Solution Architect', 'Sellers'),
+('Execute campaign / work accounts', 'Seller', 'Campaign Lead', 'Factory Agentic Lead', 'BU MM Leader'),
+('Author/register & govern agents', 'Factory Agentic Lead', 'Factory Agentic Lead', 'Admin', 'Sellers'),
+('Manage users, roles & connectors', 'Admin', 'Admin', '—', 'All');
 
-INSERT INTO mvp_outcomes (outcome, status) VALUES
-    ('MVP clearly supports the overall mid-market growth objectives, and the MVP scope is signed off by leadership', 'Open'),
-    ('Data quality, compliance and launch readiness confirmed', 'Open'),
-    ('No critical issues or gaps at go-live', 'Open');
+INSERT INTO mmf_portal.mvp_outcomes (outcome, status) VALUES
+('MVP clearly supports the overall mid-market growth objectives, and the MVP scope is signed off by leadership', 'Open'),
+('Data quality, compliance and launch readiness confirmed', 'Open'),
+('No critical issues or gaps at go-live', 'Open');
 
-INSERT INTO reference_data (category, values_text, governance_status) VALUES
+INSERT INTO mmf_portal.reference_data (category, values_text, governance_status) VALUES
     ('Business Line', 'CCA · PBS · ADM · CIS · Invent · DCX · I&D · Sogeti', 'Locked'),
     ('Industry / sector', 'Manufacturing · Retail · CPG · Automotive · TMT · E&U · Transport · Financial Services · Life Sciences', 'Open - action A4'),
     ('Segment', 'Mid-market revenue bands within €500M–€3B', 'Open - action A4'),
@@ -332,7 +332,7 @@ INSERT INTO reference_data (category, values_text, governance_status) VALUES
     ('Certification status', 'Draft · Submitted · Certified & Published', 'Locked'),
     ('Signal status', 'New · Reviewed · Dismissed', 'Locked');
 
-INSERT INTO kpi_definitions (name, unit, definition, dimensions) VALUES
+INSERT INTO mmf_portal.kpi_definitions (name, unit, definition, dimensions) VALUES
     ('Qualified pipeline', '€', 'Sum of open MM-Factory-classified opportunities in scope', ARRAY['BU','Country','Campaign']),
     ('Revenue booked', '€', 'Sum of closed-won MM-Factory-classified opportunities in scope', ARRAY['BU','Country','Campaign']),
     ('Coverage', '%', 'Target accounts with an interaction or open opportunity divided by target accounts', ARRAY['BU','Country']),
@@ -344,7 +344,7 @@ INSERT INTO kpi_definitions (name, unit, definition, dimensions) VALUES
     ('Signal → opportunity conversion', '%', 'Signals whose account opened an opportunity within the attribution window', ARRAY['BU','Engine']),
     ('Agent adoption', '#', 'Distinct users invoking an agent in the period', ARRAY['BU','Country','Agent']);
 
-INSERT INTO kpi_snapshots
+INSERT INTO mmf_portal.kpi_snapshots
     (as_of, business_unit_code, country_name, pipeline_millions, revenue_millions, coverage_percent, reuse_percent, signal_count, signal_conversion_percent, outreach_count, meeting_count, opportunities_created, stage_conversion_percent, pipeline_target_millions, revenue_target_millions, coverage_target_percent)
 VALUES
     ('2026-09-02 02:00:00+02', 'UK', NULL, 19.2, 6.1, 55, 64, 29, 15, 186, 41, 9, 22, 26, 9, 65),
@@ -356,7 +356,7 @@ VALUES
     ('2026-09-02 02:00:00+02', 'NO', 'Norway', 2.7, 1.1, 45, 58, 6, 13, 29, 7, 1, 18, 4, 1.4, 60),
     ('2026-09-02 02:00:00+02', 'NO', 'Denmark', 2.1, 0.7, 44, 57, 4, 12, 22, 4, 1, 17, 3.5, 1.1, 60);
 
-INSERT INTO audit_events (occurred_at, actor_name, action, event_details) VALUES
+INSERT INTO mmf_portal.audit_events (occurred_at, actor_name, action, event_details) VALUES
     ('2026-09-02 09:14:00+02', 'R. Patel', 'Upload validated', 'BATCH-0007 · 38 accepted, 6 rejected'),
     ('2026-09-01 16:42:00+02', 'K. Weber', 'Prospect converted', 'PRS-DE-00042 → 0061t00000AbdK2'),
     ('2026-09-01 11:07:00+02', 'System', 'Salesforce sync', 'Accounts 412 upserted · Opportunities 268 upserted'),

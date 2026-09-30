@@ -1,52 +1,52 @@
-CREATE TABLE business_units (
+CREATE TABLE mmf_portal.business_units (
     code text PRIMARY KEY,
     name text NOT NULL UNIQUE,
     has_countries boolean NOT NULL DEFAULT false
 );
 
-CREATE TABLE countries (
+CREATE TABLE mmf_portal.countries (
     name text PRIMARY KEY,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
     UNIQUE (name, business_unit_code)
 );
 
-CREATE TABLE portal_views (
+CREATE TABLE mmf_portal.portal_views (
     name text PRIMARY KEY,
     description text NOT NULL,
     navigation jsonb NOT NULL CHECK (jsonb_typeof(navigation) = 'array')
 );
 
-CREATE TABLE roles (
+CREATE TABLE mmf_portal.roles (
     name text PRIMARY KEY,
     rights_description text NOT NULL,
-    portal_view_name text NOT NULL REFERENCES portal_views(name)
+    portal_view_name text NOT NULL REFERENCES mmf_portal.portal_views(name)
 );
 
-CREATE TABLE modules (
+CREATE TABLE mmf_portal.modules (
     name text PRIMARY KEY
 );
 
-CREATE TABLE role_permissions (
-    role_name text NOT NULL REFERENCES roles(name) ON DELETE CASCADE,
-    module_name text NOT NULL REFERENCES modules(name) ON DELETE CASCADE,
+CREATE TABLE mmf_portal.role_permissions (
+    role_name text NOT NULL REFERENCES mmf_portal.roles(name) ON DELETE CASCADE,
+    module_name text NOT NULL REFERENCES mmf_portal.modules(name) ON DELETE CASCADE,
     access_level text NOT NULL CHECK (access_level IN ('NONE', 'R', 'RW', 'RW_CERTIFY')),
     PRIMARY KEY (role_name, module_name)
 );
 
-CREATE TABLE accounts (
+CREATE TABLE mmf_portal.accounts (
     name text PRIMARY KEY,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     sector text NOT NULL,
     tier smallint NOT NULL CHECK (tier IN (1, 2)),
     owner_name text NOT NULL,
     source text NOT NULL
 );
 
-CREATE TABLE prospect_upload_batches (
+CREATE TABLE mmf_portal.prospect_upload_batches (
     id text PRIMARY KEY,
     file_name text NOT NULL,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
     uploaded_by text NOT NULL,
     uploaded_at timestamptz NOT NULL,
     row_count integer NOT NULL CHECK (row_count >= 0),
@@ -56,8 +56,8 @@ CREATE TABLE prospect_upload_batches (
     CHECK (accepted_count + rejected_count = row_count)
 );
 
-CREATE TABLE prospect_upload_records (
-    batch_id text NOT NULL REFERENCES prospect_upload_batches(id) ON DELETE CASCADE,
+CREATE TABLE mmf_portal.prospect_upload_records (
+    batch_id text NOT NULL REFERENCES mmf_portal.prospect_upload_batches(id) ON DELETE CASCADE,
     row_number integer NOT NULL CHECK (row_number > 0),
     company_name text,
     result text NOT NULL CHECK (result IN ('Accepted', 'Rejected')),
@@ -65,11 +65,11 @@ CREATE TABLE prospect_upload_records (
     PRIMARY KEY (batch_id, row_number)
 );
 
-CREATE TABLE prospects (
+CREATE TABLE mmf_portal.prospects (
     id text PRIMARY KEY,
-    account_name text NOT NULL REFERENCES accounts(name),
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    account_name text NOT NULL REFERENCES mmf_portal.accounts(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     industry text NOT NULL,
     estimated_tcv_millions numeric(12,2) NOT NULL CHECK (estimated_tcv_millions >= 0),
     lifecycle_stage text NOT NULL CHECK (lifecycle_stage IN (
@@ -79,13 +79,13 @@ CREATE TABLE prospects (
     owner_name text NOT NULL,
     expected_signing_quarter text NOT NULL CHECK (expected_signing_quarter ~ '^Q[1-4]-[0-9]{4}$'),
     source text NOT NULL CHECK (source IN ('Single form', 'Excel upload', 'Radar signal', 'Campaign')),
-    upload_batch_id text REFERENCES prospect_upload_batches(id),
+    upload_batch_id text REFERENCES mmf_portal.prospect_upload_batches(id),
     qualification_status text NOT NULL
 );
 
-CREATE TABLE prospect_interactions (
+CREATE TABLE mmf_portal.prospect_interactions (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    prospect_id text NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+    prospect_id text NOT NULL REFERENCES mmf_portal.prospects(id) ON DELETE CASCADE,
     interaction_type text NOT NULL CHECK (interaction_type IN ('Outreach', 'Call', 'Meeting scheduled', 'Meeting delivered')),
     interaction_date date NOT NULL,
     seller_name text NOT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE prospect_interactions (
     due_date date NOT NULL
 );
 
-CREATE TABLE solutions (
+CREATE TABLE mmf_portal.solutions (
     name text PRIMARY KEY,
     solution_class text NOT NULL CHECK (solution_class IN ('Industry', 'Business Line', 'Cross-Business Line')),
     tags text[] NOT NULL DEFAULT '{}',
@@ -104,40 +104,40 @@ CREATE TABLE solutions (
     reuse_count integer NOT NULL DEFAULT 0 CHECK (reuse_count >= 0)
 );
 
-CREATE TABLE assets (
+CREATE TABLE mmf_portal.assets (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name text NOT NULL,
     asset_type text NOT NULL,
     version text NOT NULL,
     certification_status text NOT NULL CHECK (certification_status IN ('Draft', 'Submitted', 'Certified & Published')),
-    solution_name text NOT NULL REFERENCES solutions(name),
+    solution_name text NOT NULL REFERENCES mmf_portal.solutions(name),
     carve_out_ready boolean NOT NULL DEFAULT false,
     UNIQUE (name, version)
 );
 
-CREATE TABLE play_templates (
+CREATE TABLE mmf_portal.play_templates (
     name text PRIMARY KEY,
     channel text NOT NULL,
     step_count integer NOT NULL CHECK (step_count > 0),
-    solution_name text NOT NULL REFERENCES solutions(name)
+    solution_name text NOT NULL REFERENCES mmf_portal.solutions(name)
 );
 
-CREATE TABLE radar_engines (
+CREATE TABLE mmf_portal.radar_engines (
     name text PRIMARY KEY,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
     client_count integer NOT NULL CHECK (client_count >= 0),
     rule_count integer NOT NULL CHECK (rule_count >= 0),
     schedule text NOT NULL,
     signal_count integer NOT NULL CHECK (signal_count >= 0)
 );
 
-CREATE TABLE campaigns (
+CREATE TABLE mmf_portal.campaigns (
     name text PRIMARY KEY,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     status text NOT NULL CHECK (status IN ('Draft', 'Planned', 'Approved', 'Active', 'Paused', 'Closed', 'Review')),
-    solution_name text NOT NULL REFERENCES solutions(name),
-    radar_engine_name text REFERENCES radar_engines(name),
+    solution_name text NOT NULL REFERENCES mmf_portal.solutions(name),
+    radar_engine_name text REFERENCES mmf_portal.radar_engines(name),
     owner_name text NOT NULL,
     approver_name text NOT NULL,
     start_date date NOT NULL,
@@ -154,39 +154,39 @@ CREATE TABLE campaigns (
     CHECK (accounts_reached <= target_account_count)
 );
 
-CREATE TABLE campaign_playbook_parts (
+CREATE TABLE mmf_portal.campaign_playbook_parts (
     name text PRIMARY KEY,
     description text NOT NULL,
     display_order smallint NOT NULL UNIQUE CHECK (display_order > 0)
 );
 
-CREATE TABLE uploaded_target_accounts (
+CREATE TABLE mmf_portal.uploaded_target_accounts (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name text NOT NULL,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     sector text NOT NULL,
-    campaign_name text NOT NULL REFERENCES campaigns(name) ON DELETE CASCADE,
+    campaign_name text NOT NULL REFERENCES mmf_portal.campaigns(name) ON DELETE CASCADE,
     owner_name text NOT NULL,
     salesforce_account_id text,
     match_confidence text NOT NULL CHECK (match_confidence IN ('Low', 'Medium', 'High')),
     UNIQUE (name, campaign_name)
 );
 
-CREATE TABLE campaign_history (
+CREATE TABLE mmf_portal.campaign_history (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    campaign_name text NOT NULL REFERENCES campaigns(name) ON DELETE CASCADE,
+    campaign_name text NOT NULL REFERENCES mmf_portal.campaigns(name) ON DELETE CASCADE,
     changed_at timestamptz NOT NULL,
     changed_by text NOT NULL,
     change_description text NOT NULL
 );
 
-CREATE TABLE opportunities (
+CREATE TABLE mmf_portal.opportunities (
     id text PRIMARY KEY,
     name text NOT NULL,
-    account_name text NOT NULL REFERENCES accounts(name),
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    account_name text NOT NULL REFERENCES mmf_portal.accounts(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     industry text NOT NULL,
     value_millions numeric(12,2) NOT NULL CHECK (value_millions >= 0),
     stage text NOT NULL,
@@ -194,18 +194,18 @@ CREATE TABLE opportunities (
     close_date date NOT NULL,
     status text NOT NULL CHECK (status IN ('Open', 'Won', 'Lost')),
     is_mm_factory boolean NOT NULL DEFAULT false,
-    solution_name text REFERENCES solutions(name),
+    solution_name text REFERENCES mmf_portal.solutions(name),
     probability_percent smallint NOT NULL CHECK (probability_percent BETWEEN 0 AND 100),
     competitor text,
-    prospect_id text UNIQUE REFERENCES prospects(id)
+    prospect_id text UNIQUE REFERENCES mmf_portal.prospects(id)
 );
 
-CREATE TABLE radar_signals (
+CREATE TABLE mmf_portal.radar_signals (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
-    account_name text NOT NULL REFERENCES accounts(name),
-    radar_engine_name text NOT NULL REFERENCES radar_engines(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
+    account_name text NOT NULL REFERENCES mmf_portal.accounts(name),
+    radar_engine_name text NOT NULL REFERENCES mmf_portal.radar_engines(name),
     title text NOT NULL,
     source text NOT NULL,
     score smallint NOT NULL CHECK (score BETWEEN 0 AND 100),
@@ -215,7 +215,7 @@ CREATE TABLE radar_signals (
     UNIQUE (account_name, title)
 );
 
-CREATE TABLE data_source_connectors (
+CREATE TABLE mmf_portal.data_source_connectors (
     name text PRIMARY KEY,
     connector_type text NOT NULL,
     credential_reference text,
@@ -224,7 +224,7 @@ CREATE TABLE data_source_connectors (
     used_by text[] NOT NULL DEFAULT '{}'
 );
 
-CREATE TABLE smart_agents (
+CREATE TABLE mmf_portal.smart_agents (
     name text PRIMARY KEY,
     lifecycle_stage text NOT NULL,
     agent_type text NOT NULL CHECK (agent_type IN ('Internal', 'External')),
@@ -234,9 +234,9 @@ CREATE TABLE smart_agents (
     grounding_sources text[] NOT NULL DEFAULT '{}'
 );
 
-CREATE TABLE agent_usage_metrics (
+CREATE TABLE mmf_portal.agent_usage_metrics (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    agent_name text NOT NULL REFERENCES smart_agents(name) ON DELETE CASCADE,
+    agent_name text NOT NULL REFERENCES mmf_portal.smart_agents(name) ON DELETE CASCADE,
     measured_at timestamptz NOT NULL,
     invocation_count integer NOT NULL CHECK (invocation_count >= 0),
     distinct_user_count integer NOT NULL CHECK (distinct_user_count >= 0),
@@ -250,7 +250,7 @@ CREATE TABLE agent_usage_metrics (
     UNIQUE (agent_name, measured_at)
 );
 
-CREATE TABLE governance_councils (
+CREATE TABLE mmf_portal.governance_councils (
     name text PRIMARY KEY,
     cadence text NOT NULL,
     scope text NOT NULL CHECK (scope IN ('SBU', 'BU')),
@@ -260,9 +260,9 @@ CREATE TABLE governance_councils (
     action_count integer NOT NULL CHECK (action_count >= 0)
 );
 
-CREATE TABLE governance_meetings (
+CREATE TABLE mmf_portal.governance_meetings (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    council_name text NOT NULL REFERENCES governance_councils(name),
+    council_name text NOT NULL REFERENCES mmf_portal.governance_councils(name),
     meeting_date date NOT NULL,
     attendees text NOT NULL,
     notes text NOT NULL,
@@ -271,7 +271,7 @@ CREATE TABLE governance_meetings (
     UNIQUE (council_name, meeting_date)
 );
 
-CREATE TABLE governance_decisions (
+CREATE TABLE mmf_portal.governance_decisions (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     decision text NOT NULL,
     owner_name text NOT NULL,
@@ -280,7 +280,7 @@ CREATE TABLE governance_decisions (
     reference_type text
 );
 
-CREATE TABLE governance_actions (
+CREATE TABLE mmf_portal.governance_actions (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     action text NOT NULL,
     owner_name text NOT NULL,
@@ -288,7 +288,7 @@ CREATE TABLE governance_actions (
     status text NOT NULL CHECK (status IN ('Open', 'Closed'))
 );
 
-CREATE TABLE raci_assignments (
+CREATE TABLE mmf_portal.raci_assignments (
     activity text PRIMARY KEY,
     responsible text NOT NULL,
     accountable text NOT NULL,
@@ -296,30 +296,30 @@ CREATE TABLE raci_assignments (
     informed text NOT NULL
 );
 
-CREATE TABLE mvp_outcomes (
+CREATE TABLE mmf_portal.mvp_outcomes (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     outcome text NOT NULL UNIQUE,
     status text NOT NULL
 );
 
-CREATE TABLE reference_data (
+CREATE TABLE mmf_portal.reference_data (
     category text PRIMARY KEY,
     values_text text NOT NULL,
     governance_status text NOT NULL
 );
 
-CREATE TABLE kpi_definitions (
+CREATE TABLE mmf_portal.kpi_definitions (
     name text PRIMARY KEY,
     unit text NOT NULL,
     definition text NOT NULL,
     dimensions text[] NOT NULL
 );
 
-CREATE TABLE kpi_snapshots (
+CREATE TABLE mmf_portal.kpi_snapshots (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     as_of timestamptz NOT NULL,
-    business_unit_code text NOT NULL REFERENCES business_units(code),
-    country_name text REFERENCES countries(name),
+    business_unit_code text NOT NULL REFERENCES mmf_portal.business_units(code),
+    country_name text REFERENCES mmf_portal.countries(name),
     pipeline_millions numeric(12,2) NOT NULL,
     revenue_millions numeric(12,2) NOT NULL,
     coverage_percent numeric(5,2) NOT NULL CHECK (coverage_percent BETWEEN 0 AND 100),
@@ -336,7 +336,7 @@ CREATE TABLE kpi_snapshots (
     UNIQUE (as_of, business_unit_code, country_name)
 );
 
-CREATE TABLE audit_events (
+CREATE TABLE mmf_portal.audit_events (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     occurred_at timestamptz NOT NULL,
     actor_name text NOT NULL,
@@ -344,9 +344,9 @@ CREATE TABLE audit_events (
     event_details text NOT NULL
 );
 
-CREATE INDEX prospects_scope_idx ON prospects (business_unit_code, country_name, lifecycle_stage);
-CREATE INDEX opportunities_scope_idx ON opportunities (business_unit_code, country_name, status);
-CREATE INDEX campaigns_scope_idx ON campaigns (business_unit_code, country_name, status);
-CREATE INDEX radar_signals_scope_idx ON radar_signals (business_unit_code, country_name, status, score DESC);
-CREATE INDEX interactions_prospect_date_idx ON prospect_interactions (prospect_id, interaction_date DESC);
-CREATE INDEX audit_events_occurred_at_idx ON audit_events (occurred_at DESC);
+CREATE INDEX prospects_scope_idx ON mmf_portal.prospects (business_unit_code, country_name, lifecycle_stage);
+CREATE INDEX opportunities_scope_idx ON mmf_portal.opportunities (business_unit_code, country_name, status);
+CREATE INDEX campaigns_scope_idx ON mmf_portal.campaigns (business_unit_code, country_name, status);
+CREATE INDEX radar_signals_scope_idx ON mmf_portal.radar_signals (business_unit_code, country_name, status, score DESC);
+CREATE INDEX interactions_prospect_date_idx ON mmf_portal.prospect_interactions (prospect_id, interaction_date DESC);
+CREATE INDEX audit_events_occurred_at_idx ON mmf_portal.audit_events (occurred_at DESC);

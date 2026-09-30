@@ -2,14 +2,20 @@ package com.mmfactory.partnerplay.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "partner_plays")
+@Table(name = "partner_plays", schema = "mmf_portal")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +24,10 @@ import java.math.BigDecimal;
 public class PartnerPlay {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name")
     private String name;
 
     @Column(name = "partner_name")
@@ -48,4 +58,3 @@ public class PartnerPlay {
     @Column(name = "owner_name")
     private String ownerName;
 }
-
