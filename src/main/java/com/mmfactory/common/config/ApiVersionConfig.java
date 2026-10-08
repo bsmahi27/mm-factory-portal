@@ -25,6 +25,5 @@ public class ApiVersionConfig implements WebMvcConfigurer {
         configurer.addPathPrefix("/api/v{version}",
                 HandlerTypePredicate.forAnnotation(RestController.class)
                         .and(HandlerTypePredicate.forBasePackage("org.springdoc").negate()));
-        ;
     }
 }
