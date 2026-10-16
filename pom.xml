@@ -29,6 +29,8 @@
 	<properties>
 		<java.version>25</java.version>
 		<openapi-starter-webmvc-ui.version>3.1.1</openapi-starter-webmvc-ui.version>
+		<spring-modulith.version>2.1.1</spring-modulith.version>
+		<fastexcel-reader.version>0.20.2</fastexcel-reader.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -63,6 +65,17 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-core</artifactId>
+		</dependency>
+
+		<!-- Automatically handles the CQRS Transactional Outbox Pattern via JDBC/JPA -->
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-jpa</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
@@ -71,6 +84,12 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.dhatim</groupId>
+			<artifactId>fastexcel-reader</artifactId>
+			<version>${fastexcel-reader.version}</version> <!-- Check for the latest stable release -->
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -102,7 +121,23 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.modulith</groupId>
+			<artifactId>spring-modulith-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.modulith</groupId>
+				<artifactId>spring-modulith-bom</artifactId>
+				<version>${spring-modulith.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<build>
 		<plugins>
